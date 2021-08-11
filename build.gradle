@@ -1,0 +1,42 @@
+
+plugins {
+    id 'java'
+    id 'idea'
+    id 'eclipse'
+    id "io.freefair.lombok" version "6.1.0-m3"
+    id 'org.springframework.boot' version '2.5.2'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+}
+
+version = '0.0.1-SNAPSHOT'
+group = 'com.db.awmd.challenge'
+sourceCompatibility = 1.14
+targetCompatibility = 1.14
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    testImplementation('org.springframework.boot:spring-boot-starter-test')
+
+
+    implementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
+    implementation group: 'org.hibernate.validator', name: 'hibernate-validator', version: '7.0.1.Final'
+
+    annotationProcessor("org.projectlombok:lombok")
+    compileOnly("org.projectlombok:lombok")
+
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+}
+
+test {
+    useJUnitPlatform()
+}
