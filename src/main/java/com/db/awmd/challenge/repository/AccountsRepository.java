@@ -12,5 +12,5 @@ public interface AccountsRepository {
   Account getAccount(String accountId);
 
   void clearAccounts();
-  void transfer(Account acc1, Account acc2, BigDecimal value)
+  void transfer(Account acc1, Account acc2, BigDecimal value);
 }
