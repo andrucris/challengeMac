@@ -10,7 +10,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
-public class Account {
+public class Account implements BankAccount{
 
   public static final String LOCK  = "Lock";
   @NotNull
@@ -33,14 +33,35 @@ public class Account {
     this.balance = balance;
   }
 
+  public String getAccountId() {
+    return accountId;
+  }
+
+  public BigDecimal getBalance() {
+    return balance;
+  }
+
+  public Account setBalance(BigDecimal balance) {
+    this.balance = balance;
+    return this;
+  }
+
+  @Override
   public void withdraw(BigDecimal value) {
     if(this.balance.subtract(value).compareTo(BigDecimal.ZERO)<0){
       return;
     }
-    this.balance.subtract(value);
+    try {
+      Thread.sleep(1000L); //simulating DB access
+    } catch(InterruptedException e) {}
+    setBalance(this.balance.subtract(value));
   }
 
+  @Override
   public void deposit(BigDecimal value) {
-    this.balance.add(value);
+    try {
+      Thread.sleep(1000L); //simulating DB access
+    } catch(InterruptedException e) {}
+    setBalance(this.balance.add(value));
   }
 }

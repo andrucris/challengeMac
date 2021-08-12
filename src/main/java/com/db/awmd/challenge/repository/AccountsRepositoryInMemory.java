@@ -26,7 +26,7 @@ public class AccountsRepositoryInMemory implements AccountsRepository {
   }
 
   private int compareAccountIds(Account source, Account destination) {
-    return source.getAccountId().compareTo(destination.id);
+    return source.getAccountId().compareTo(destination.getAccountId());
   }
   @Override
   public void transfer(Account sourceAccount, Account destinationAccount, BigDecimal amount) {
@@ -40,10 +40,13 @@ public class AccountsRepositoryInMemory implements AccountsRepository {
       sourceLock = sourceAccount;
       destinationLock = destinationAccount;
     }
+    log.info("Source account balance value " + sourceAccount.getBalance().toString());
+    log.info("Destination account balance value " + destinationAccount.getBalance().toString());
     synchronized (sourceLock) {
       log.info("Source account lock obtained");
-      if (sourceAccount.getBalance().compareTo(amount) <= 0) {
-        throw new IllegalArgumentException("Insufficient funds in source account with ID: " + sourceAccount.getAccountId());
+      if (sourceAccount.getBalance().compareTo(amount) < 0) {
+        throw new IllegalArgumentException("Insufficient funds in source account with ID: " + sourceAccount.getAccountId() + " available sum is " + sourceAccount.getBalance()+ " sum to be retrieved is " + amount);
+
       }
       sourceAccount.withdraw(amount);
       synchronized (destinationLock) {
@@ -51,6 +54,22 @@ public class AccountsRepositoryInMemory implements AccountsRepository {
         destinationAccount.deposit(amount);
       }
     }
+    log.info("Source account balance value " + sourceAccount.getBalance().toString());
+    log.info("Destination account balance value " + destinationAccount.getBalance().toString());
+  }
+  @Override
+  public void transferWithoutSynchronization(Account sourceAccount, Account destinationAccount, BigDecimal amount) {
+
+    log.info("Before Source account balance value " + sourceAccount.getBalance().toString());
+    log.info("Before Destination account balance value " + destinationAccount.getBalance().toString());
+
+    if (sourceAccount.getBalance().compareTo(amount) < 0) {
+      throw new IllegalArgumentException("Insufficient funds in source account with ID: " + sourceAccount.getAccountId() + " available sum is " + sourceAccount.getBalance() + " sum to be retrieved is " + amount);
+    }
+    sourceAccount.withdraw(amount);
+    destinationAccount.deposit(amount);
+    log.info("After Source account balance value " + sourceAccount.getBalance().toString());
+    log.info("After Destination account balance value " + destinationAccount.getBalance().toString());
   }
   @Override
   public Account getAccount(String accountId) {

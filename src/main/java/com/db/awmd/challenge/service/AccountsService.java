@@ -30,4 +30,7 @@ public class AccountsService {
   public void transferMoney(Account accountFrom, Account accountTo, BigDecimal sum){
         this.accountsRepository.transfer(accountFrom,accountTo, sum);
   }
+  public void transferMoneyWithoutSynchronization(Account accountFrom, Account accountTo, BigDecimal sum){
+    this.accountsRepository.transferWithoutSynchronization(accountFrom,accountTo, sum);
+  }
 }

@@ -8,6 +8,11 @@ import com.db.awmd.challenge.domain.Account;
 import com.db.awmd.challenge.exception.DuplicateAccountIdException;
 import com.db.awmd.challenge.service.AccountsService;
 import java.math.BigDecimal;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Test;
 
@@ -44,6 +49,145 @@ public class AccountsServiceTest {
     } catch (DuplicateAccountIdException ex) {
       assertThat(ex.getMessage()).isEqualTo("Account id " + uniqueId + " already exists!");
     }
+
+  }
+  @Test
+  public void transferInsufficientFunds(){
+    String sourceUniqueId = "Id-" + System.currentTimeMillis();
+    Account sourceAccount = new Account(sourceUniqueId);
+
+    sourceAccount.deposit(new BigDecimal(100));
+
+    String destinationUniqueId = "Id-" + System.currentTimeMillis();
+    Account destinationAccount = new Account(destinationUniqueId);
+
+    try {
+      this.accountsService.transferMoney(sourceAccount, destinationAccount, new BigDecimal(500));
+    }catch (IllegalArgumentException e){
+      assertThat(e.getMessage().startsWith("Insufficient funds in source account with ID: " )).isTrue();
+    }
+
+  }
+  @Test
+  public void transferFunds(){
+    String sourceUniqueId = "Id-" + System.currentTimeMillis();
+    Account sourceAccount = new Account(sourceUniqueId);
+
+
+    String destinationUniqueId = "Id-" + System.currentTimeMillis();
+    Account destinationAccount = new Account(destinationUniqueId);
+
+
+    sourceAccount.deposit(new BigDecimal(1000));
+
+    this.accountsService.transferMoney(sourceAccount, destinationAccount, new BigDecimal(500));
+    assertThat(sourceAccount.getBalance()).isEqualTo(new BigDecimal(500));
+    assertThat(destinationAccount.getBalance()).isEqualTo(new BigDecimal(500));
+
+
+  }
+  @Test
+  public void testDeadLock(){
+
+
+    String sourceUniqueId = "Id-" + System.currentTimeMillis();
+    Account sourceAccount = new Account(sourceUniqueId);
+
+
+
+    String destinationUniqueId = "Id-" + System.currentTimeMillis();
+    Account destinationAccount = new Account(destinationUniqueId);
+
+
+    sourceAccount.deposit(new BigDecimal(100));
+    destinationAccount.deposit(new BigDecimal(80));
+
+    try {
+    Thread t1 = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        System.out.println("Inside : " + Thread.currentThread().getName());
+        accountsService.transferMoney(sourceAccount,destinationAccount,new BigDecimal(100));
+      }
+    });
+    Thread t2 = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        System.out.println("Inside : " + Thread.currentThread().getName());
+        accountsService.transferMoney(sourceAccount,destinationAccount,new BigDecimal(100));
+      }
+    });
+    Thread t3 = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        System.out.println("Inside : " + Thread.currentThread().getName());
+        accountsService.transferMoney(sourceAccount,destinationAccount,new BigDecimal(80));
+      }
+    });
+
+    t1.start();
+    t2.start();
+    t3.start();
+
+    try {
+      t1.join();
+      t2.join();
+      t3.join();
+      } catch(InterruptedException e){}
+
+    }catch (IllegalArgumentException e) {
+      assertThat(e.getMessage().startsWith("Insufficient funds in source account with ID: ")).isTrue();
+    }
+  }
+
+  @Test
+  public void testDeadLockWithoutSynchronization(){
+
+
+    String sourceUniqueId = "Id-" + System.currentTimeMillis();
+    Account sourceAccount = new Account(sourceUniqueId);
+
+
+
+    String destinationUniqueId = "Id-" + System.currentTimeMillis();
+    Account destinationAccount = new Account(destinationUniqueId);
+
+
+    sourceAccount.deposit(new BigDecimal(100));
+    destinationAccount.deposit(new BigDecimal(80));
+    Thread t1 = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        System.out.println("Inside : " + Thread.currentThread().getName());
+       accountsService.transferMoneyWithoutSynchronization(sourceAccount,destinationAccount,new BigDecimal(100));
+      }
+    });
+    Thread t2 = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        System.out.println("Inside : " + Thread.currentThread().getName());
+        accountsService.transferMoneyWithoutSynchronization(sourceAccount,destinationAccount,new BigDecimal(100));
+      }
+    });
+    Thread t3 = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        System.out.println("Inside : " + Thread.currentThread().getName());
+        accountsService.transferMoneyWithoutSynchronization(sourceAccount,destinationAccount,new BigDecimal(5));
+      }
+    });
+
+    t1.start();
+    t2.start();
+    t3.start();
+
+    try {
+      t1.join();
+      t2.join();
+      t3.join();
+    } catch(InterruptedException e){}
+    assertThat(sourceAccount.getBalance().compareTo(BigDecimal.ZERO)<0);
+
 
   }
 }

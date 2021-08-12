@@ -13,4 +13,5 @@ public interface AccountsRepository {
 
   void clearAccounts();
   void transfer(Account acc1, Account acc2, BigDecimal value);
+  void transferWithoutSynchronization(Account sourceAccount, Account destinationAccount, BigDecimal amount);
 }

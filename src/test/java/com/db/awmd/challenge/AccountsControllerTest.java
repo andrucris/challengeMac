@@ -10,7 +10,9 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 import com.db.awmd.challenge.domain.Account;
 import com.db.awmd.challenge.service.AccountsService;
 import java.math.BigDecimal;
+import java.util.UUID;
 
+import com.db.awmd.challenge.service.NotificationService;
 import org.junit.Before;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Test;
@@ -33,6 +35,9 @@ public class AccountsControllerTest {
 
   @Autowired
   private AccountsService accountsService;
+
+  @Autowired
+  private NotificationService notificationService;
 
   @Autowired
   private WebApplicationContext webApplicationContext;
@@ -103,5 +108,13 @@ public class AccountsControllerTest {
       .andExpect(status().isOk())
       .andExpect(
         content().string("{\"accountId\":\"" + uniqueAccountId + "\",\"balance\":123.45}"));
+  }
+
+  @Test
+  public void transferBetweenAccounts() throws Exception {
+    String sourceAccountId = UUID.randomUUID().toString();
+    String destAccountId = UUID.randomUUID().toString();
+    this.mockMvc.perform(get("/v1/accounts/" + sourceAccountId+"/"+destAccountId))
+            .andExpect(status().isOk());
   }
 }
